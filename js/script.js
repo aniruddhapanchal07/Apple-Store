@@ -69,6 +69,7 @@ const switchToLogin = document.getElementById('switch-to-login');
 
 function showLoginModal() {
   loginResult.textContent = '';
+  loginResult.style.display = 'none';
   loginEmail.value = '';
   loginPassword.value = '';
   loginModal.classList.remove('hidden');
@@ -77,6 +78,7 @@ function showLoginModal() {
 
 function showSignupModal() {
   signupResult.textContent = '';
+  signupResult.style.display = 'none';
   signupEmail.value = '';
   signupPassword.value = '';
   signupModal.classList.remove('hidden');
@@ -129,6 +131,7 @@ signinBtn.onclick = function() {
   const password = loginPassword.value.trim();
   if (!email || !password) {
     loginResult.textContent = "Please enter email and password.";
+    loginResult.style.display = 'block';
     return;
   }
   
@@ -140,8 +143,10 @@ signinBtn.onclick = function() {
     localStorage.setItem('currentUser', email);
     updateUIForLoggedInUser(email);
     loginResult.textContent = '';
+    loginResult.style.display = 'none';
   } else {
     loginResult.textContent = "Invalid email or password.";
+    loginResult.style.display = 'block';
   }
 };
 
@@ -150,6 +155,7 @@ signupBtn.onclick = function() {
   const password = signupPassword.value.trim();
   if (!email || !password) {
     signupResult.textContent = "Please enter email and password.";
+    signupResult.style.display = 'block';
     return;
   }
   
@@ -158,6 +164,7 @@ signupBtn.onclick = function() {
   // Check if user already exists
   if (users.find(u => u.email === email)) {
     signupResult.textContent = "User already exists with this email.";
+    signupResult.style.display = 'block';
     return;
   }
   
@@ -169,6 +176,7 @@ signupBtn.onclick = function() {
   localStorage.setItem('currentUser', email);
   updateUIForLoggedInUser(email);
   signupResult.textContent = '';
+  signupResult.style.display = 'none';
 };
 
 logoutBtn.onclick = function() {
@@ -322,7 +330,14 @@ document.getElementById('close-cart').onclick = () => closeModal('cart-modal');
 document.getElementById('close-wishlist').onclick = () => closeModal('wishlist-modal');
 document.getElementById('close-checkout').onclick = () => closeModal('checkout-modal');
 document.getElementById('close-status').onclick = () => closeModal('status-modal');
-document.getElementById('status-btn').onclick = () => { showModal('status-modal'); };
+document.getElementById('status-btn').onclick = () => { 
+  // Clear form and results when opening status modal
+  document.getElementById('status-form').reset();
+  const statusResult = document.getElementById('status-result');
+  statusResult.textContent = '';
+  statusResult.style.display = 'none';
+  showModal('status-modal'); 
+};
 
 // --- Cart Modal Render ---
 function renderCart() {
@@ -433,7 +448,9 @@ document.getElementById('checkout-btn').onclick = () => {
     closeModal('cart-modal');
     return;
   }
-  document.getElementById('checkout-result').textContent = '';
+  const checkoutResult = document.getElementById('checkout-result');
+  checkoutResult.textContent = '';
+  checkoutResult.style.display = 'none';
   showModal('checkout-modal');
 };
 document.getElementById('checkout-form').onsubmit = function(e) {
@@ -462,7 +479,9 @@ document.getElementById('checkout-form').onsubmit = function(e) {
   updateCounts();
 
   // Show success message
-  document.getElementById('checkout-result').textContent = 'Order placed successfully!';
+  const checkoutResult = document.getElementById('checkout-result');
+  checkoutResult.textContent = 'Order placed successfully!';
+  checkoutResult.style.display = 'block';
   
   // Close both cart and checkout modals after a short delay
   setTimeout(() => {
@@ -470,7 +489,8 @@ document.getElementById('checkout-form').onsubmit = function(e) {
     closeModal('cart-modal');
     // Clear the form
     document.getElementById('checkout-form').reset();
-    document.getElementById('checkout-result').textContent = '';
+    checkoutResult.textContent = '';
+    checkoutResult.style.display = 'none';
   }, 1500);
 };
 
@@ -525,21 +545,32 @@ document.getElementById('status-form').onsubmit = function(e) {
   const fullname = this.fullname.value.trim();
   const email = this.email.value.trim();
   const orders = loadCSVData('orders');
-  const match = orders.find(o => o.fullname === fullname && o.email === email);
+  const matches = orders.filter(o => o.fullname === fullname && o.email === email);
   const res = document.getElementById('status-result');
-  if (match) {
-    const itemIds = match.items.split(';');
-    const itemNames = itemIds.map(id => {
-      const product = products.find(p => p.id === id);
-      return product ? product.name : 'Unknown Product';
+  
+  if (matches.length > 0) {
+    let ordersHtml = `<strong>Orders for ${fullname} (${email}):</strong><br><br>`;
+    
+    matches.forEach((order, index) => {
+      const itemIds = order.items.split(';');
+      const itemNames = itemIds.map(id => {
+        const product = products.find(p => p.id === id);
+        return product ? product.name : 'Unknown Product';
+      });
+      
+      ordersHtml += `<div style="border: 1px solid #4DD784; padding: 10px; margin: 10px 0; border-radius: 5px;">
+        <strong>Order ${index + 1}</strong><br>
+        Order ID: <strong>${order.id}</strong><br>
+        Date: <strong>${new Date(order.timestamp).toLocaleDateString()}</strong><br>
+        Items:<br>
+        <ul>${itemNames.map(name => `<li>${name}</li>`).join('')}</ul>
+      </div>`;
     });
     
-    res.innerHTML = `Order placed for <strong>${fullname}</strong> (<strong>${email}</strong>)<br>
-    Order ID: <strong>${match.id}</strong><br>
-    Date: <strong>${new Date(match.timestamp).toLocaleDateString()}</strong><br>
-    Items:<br>
-    <ul>${itemNames.map(name => `<li>${name}</li>`).join('')}</ul>`;
+    res.innerHTML = ordersHtml;
+    res.style.display = 'block';
   } else {
     res.textContent = 'No orders found for these details.';
+    res.style.display = 'block';
   }
 };

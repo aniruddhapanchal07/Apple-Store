@@ -1,6 +1,12 @@
 # Vercel deployment files
 .vercel/
 public/
+vercel.json
+.vercelignore
+
+# Package management
+package.json
+package-lock.json
 
 # Build outputs
 dist/
