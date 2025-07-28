@@ -1,0 +1,545 @@
+
+// --- CSV Storage Functions ---
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length === 0 || lines[0] === '') return [];
+  
+  const headers = lines[0].split(',');
+  const data = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',');
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = values[index] || '';
+    });
+    data.push(obj);
+  }
+  return data;
+}
+
+function arrayToCSV(array, headers) {
+  if (array.length === 0) return headers.join(',') + '\n';
+  
+  const csvContent = headers.join(',') + '\n' + 
+    array.map(row => headers.map(header => row[header] || '').join(',')).join('\n');
+  return csvContent;
+}
+
+function downloadCSV(filename, csvContent) {
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function loadCSVData(key) {
+  const csvData = localStorage.getItem(key);
+  if (!csvData) return [];
+  return parseCSV(csvData);
+}
+
+function saveCSVData(key, data, headers) {
+  const csvContent = arrayToCSV(data, headers);
+  localStorage.setItem(key, csvContent);
+}
+
+// --- User Authentication ---
+let currentUser = null;
+const authBtn = document.getElementById('auth-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userInfo = document.getElementById('user-info');
+const loginModal = document.getElementById('login-modal');
+const signupModal = document.getElementById('signup-modal');
+const closeLogin = document.getElementById('close-login');
+const closeSignup = document.getElementById('close-signup');
+const signinBtn = document.getElementById('signin-btn');
+const signupBtn = document.getElementById('signup-btn');
+const loginEmail = document.getElementById('login-email');
+const loginPassword = document.getElementById('login-password');
+const signupEmail = document.getElementById('signup-email');
+const signupPassword = document.getElementById('signup-password');
+const loginResult = document.getElementById('login-result');
+const signupResult = document.getElementById('signup-result');
+const switchToSignup = document.getElementById('switch-to-signup');
+const switchToLogin = document.getElementById('switch-to-login');
+
+function showLoginModal() {
+  loginResult.textContent = '';
+  loginEmail.value = '';
+  loginPassword.value = '';
+  loginModal.classList.remove('hidden');
+  signupModal.classList.add('hidden');
+}
+
+function showSignupModal() {
+  signupResult.textContent = '';
+  signupEmail.value = '';
+  signupPassword.value = '';
+  signupModal.classList.remove('hidden');
+  loginModal.classList.add('hidden');
+}
+
+function closeAuthModals() {
+  loginModal.classList.add('hidden');
+  signupModal.classList.add('hidden');
+}
+
+// Check if user is logged in on page load
+function checkUserSession() {
+  const users = loadCSVData('users');
+  const sessionUser = localStorage.getItem('currentUser');
+  if (sessionUser) {
+    const user = users.find(u => u.email === sessionUser);
+    if (user) {
+      currentUser = user;
+      updateUIForLoggedInUser(user.email);
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateUIForLoggedInUser(email) {
+  userInfo.textContent = ''; // Don't show email in UI
+  authBtn.style.display = 'none';
+  logoutBtn.style.display = '';
+  closeAuthModals();
+}
+
+function updateUIForLoggedOutUser() {
+  userInfo.textContent = '';
+  authBtn.style.display = '';
+  logoutBtn.style.display = 'none';
+  currentUser = null;
+  localStorage.removeItem('currentUser');
+}
+
+authBtn.onclick = showLoginModal;
+closeLogin.onclick = closeAuthModals;
+closeSignup.onclick = closeAuthModals;
+switchToSignup.onclick = showSignupModal;
+switchToLogin.onclick = showLoginModal;
+
+signinBtn.onclick = function() {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
+  if (!email || !password) {
+    loginResult.textContent = "Please enter email and password.";
+    return;
+  }
+  
+  const users = loadCSVData('users');
+  const user = users.find(u => u.email === email && u.password === password);
+  
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('currentUser', email);
+    updateUIForLoggedInUser(email);
+    loginResult.textContent = '';
+  } else {
+    loginResult.textContent = "Invalid email or password.";
+  }
+};
+
+signupBtn.onclick = function() {
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value.trim();
+  if (!email || !password) {
+    signupResult.textContent = "Please enter email and password.";
+    return;
+  }
+  
+  let users = loadCSVData('users');
+  
+  // Check if user already exists
+  if (users.find(u => u.email === email)) {
+    signupResult.textContent = "User already exists with this email.";
+    return;
+  }
+  
+  // Add new user
+  users.push({ email: email, password: password });
+  saveCSVData('users', users, ['email', 'password']);
+  
+  currentUser = { email: email, password: password };
+  localStorage.setItem('currentUser', email);
+  updateUIForLoggedInUser(email);
+  signupResult.textContent = '';
+};
+
+logoutBtn.onclick = function() {
+  updateUIForLoggedOutUser();
+  showLoginModal(); // Show login modal after logout
+};
+
+
+function requireAuth(action) {
+  if (!currentUser) {
+    alert('Please sign in first!');
+    showLoginModal();
+    return false;
+  }
+  return true;
+}
+
+
+
+// --- Product Data ---
+const products = [
+  {
+    id: 'mb-air',
+    name: 'MacBook Air M2',
+    category: 'MacBooks',
+    price: 119900,
+    image: 'assets/macbook-air.png'
+  },
+  {
+    id: 'mb-pro',
+    name: 'MacBook Pro 14”',
+    category: 'MacBooks',
+    price: 199900,
+    image: 'assets/macbook-pro.png'
+  },
+  {
+    id: 'iphone-16',
+    name: 'iPhone 16',
+    category: 'iPhones',
+    price: 79999,
+    image: 'assets/iphone-16.png'
+  },
+  {
+    id: 'iphone-16pro',
+    name: 'iPhone 16 Pro',
+    category: 'iPhones',
+    price: 129999,
+    image: 'assets/iphone-16-pro.png'
+  },
+  {
+    id: 'airpods-pro',
+    name: 'AirPods Pro',
+    category: 'Accessories',
+    price: 24999,
+    image: 'https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83?wid=600&hei=600&fmt=jpeg&qlt=95&.v=1660803972361'
+  }
+];
+
+// --- Utilities ---
+function formatRupees(x) {
+  return x.toLocaleString('en-IN');
+}
+
+function save(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function load(key) {
+  return JSON.parse(localStorage.getItem(key)) || [];
+}
+
+// --- Rendering Functions ---
+function renderProducts(prodArray) {
+  const prodList = document.getElementById('product-list');
+  prodList.innerHTML = '';
+  for (const prod of prodArray) {
+    const div = document.createElement('div');
+    div.className = 'product-card';
+    div.innerHTML = `
+      <img src="${prod.image}" alt="${prod.name}" />
+      <h3>${prod.name}</h3>
+      <p class="price">₹${formatRupees(prod.price)}</p>
+      <p>${prod.category}</p>
+      <button onclick="addToCart('${prod.id}')">Add to Cart</button>
+      <button onclick="addToWishlist('${prod.id}')">Add to Wishlist</button>
+    `;
+    prodList.appendChild(div);
+  }
+}
+
+// --- Cart/Wishlist Logic ---
+window.addToCart = function(id) {
+  if (!requireAuth()) return;
+  let cart = load('cart');
+  cart.push(id);
+  save('cart', cart);
+  updateCounts();
+  alert('Added to cart!');
+};
+window.addToWishlist = function(id) {
+  if (!requireAuth()) return;
+  let wish = load('wishlist');
+  if (!wish.includes(id)) wish.push(id);
+  save('wishlist', wish);
+  updateCounts();
+  alert('Added to wishlist!');
+};
+
+function updateCounts() {
+  document.getElementById('cart-count').textContent = load('cart').length;
+  document.getElementById('wishlist-count').textContent = load('wishlist').length;
+  
+  // Also update cart display if cart modal is currently open
+  const cartModal = document.getElementById('cart-modal');
+  if (!cartModal.classList.contains('hidden')) {
+    const cartIds = load('cart');
+    if (cartIds.length === 0) {
+      closeModal('cart-modal');
+    } else {
+      renderCart();
+    }
+  }
+}
+
+// --- Modal Logic ---
+function showModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+document.getElementById('cart-btn').onclick = () => { 
+  const cartIds = load('cart');
+  if (cartIds.length === 0) {
+    alert('Your cart is empty!');
+    return;
+  }
+  renderCart(); 
+  showModal('cart-modal'); 
+};
+document.getElementById('wishlist-btn').onclick = () => { 
+  const wishIds = load('wishlist');
+  if (wishIds.length === 0) {
+    alert('Your wishlist is empty!');
+    return;
+  }
+  renderWishlist(); 
+  showModal('wishlist-modal'); 
+};
+document.getElementById('close-cart').onclick = () => closeModal('cart-modal');
+document.getElementById('close-wishlist').onclick = () => closeModal('wishlist-modal');
+document.getElementById('close-checkout').onclick = () => closeModal('checkout-modal');
+document.getElementById('close-status').onclick = () => closeModal('status-modal');
+document.getElementById('status-btn').onclick = () => { showModal('status-modal'); };
+
+// --- Cart Modal Render ---
+function renderCart() {
+  const ul = document.getElementById('cart-items');
+  ul.innerHTML = '';
+  const cartIds = load('cart');
+  let total = 0;
+  
+  // Check if cart is empty and close modal if it is
+  if (cartIds.length === 0) {
+    closeModal('cart-modal');
+    return;
+  }
+  
+  for (const id of cartIds) {
+    const prod = products.find(p => p.id === id);
+    if (!prod) continue;
+    total += prod.price;
+    const li = document.createElement('li');
+    li.innerHTML = `<img src="${prod.image}" style="width:36px;height:36px;vertical-align:middle;border-radius:8px;"> 
+      ${prod.name} - ₹${formatRupees(prod.price)} 
+      <button onclick="removeCart('${id}')">Remove</button>`;
+    ul.appendChild(li);
+  }
+  document.getElementById('cart-total').textContent = formatRupees(total);
+}
+window.removeCart = function(id) {
+  let cart = load('cart');
+  cart = cart.filter(x => x !== id);
+  save('cart', cart);
+  updateCounts();
+  
+  // Check if cart is now empty and close modal
+  if (cart.length === 0) {
+    closeModal('cart-modal');
+    alert('Cart is now empty!');
+  } else {
+    renderCart();
+  }
+};
+
+function renderWishlist() {
+  const ul = document.getElementById('wishlist-items');
+  ul.innerHTML = '';
+  const wishIds = load('wishlist');
+  
+  // Check if wishlist is empty and close modal if it is
+  if (wishIds.length === 0) {
+    closeModal('wishlist-modal');
+    return;
+  }
+  
+  for (const id of wishIds) {
+    const prod = products.find(p => p.id === id);
+    if (!prod) continue;
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <img src="${prod.image}" style="width:64px;height:64px;vertical-align:middle;border-radius:12px;object-fit:contain;">
+      ${prod.name} - ₹${formatRupees(prod.price)} 
+      <button onclick="removeWishlist('${id}')">Remove</button>
+      <button onclick="moveToCart('${id}')">Move to Cart</button>
+    `;
+    ul.appendChild(li);
+  }
+}
+window.moveToCart = function(id) {
+  let cart = load('cart');
+  if (!cart.includes(id)) {
+    cart.push(id);
+    save('cart', cart);
+  }
+  // Remove from wishlist after moving
+  let wish = load('wishlist');
+  wish = wish.filter(x => x !== id);
+  save('wishlist', wish);
+  updateCounts();
+  
+  // Check if wishlist is now empty and close modal
+  if (wish.length === 0) {
+    closeModal('wishlist-modal');
+    alert('Item moved to cart! Wishlist is now empty.');
+  } else {
+    renderWishlist();
+    alert('Moved to cart!');
+  }
+};
+
+window.removeWishlist = function(id) {
+  let wish = load('wishlist');
+  wish = wish.filter(x => x !== id);
+  save('wishlist', wish);
+  updateCounts();
+  
+  // Check if wishlist is now empty and close modal
+  if (wish.length === 0) {
+    closeModal('wishlist-modal');
+    alert('Wishlist is now empty!');
+  } else {
+    renderWishlist();
+  }
+};
+
+// --- Checkout Logic ---
+document.getElementById('checkout-btn').onclick = () => {
+  const cartIds = load('cart');
+  if (cartIds.length === 0) {
+    alert('Cart is empty.');
+    closeModal('cart-modal');
+    return;
+  }
+  document.getElementById('checkout-result').textContent = '';
+  showModal('checkout-modal');
+};
+document.getElementById('checkout-form').onsubmit = function(e) {
+  e.preventDefault();
+  const fullname = this.fullname.value.trim();
+  const email = this.email.value.trim();
+  const cartIds = load('cart');
+  if (!fullname || !email || cartIds.length === 0) return;
+
+  // Save order to CSV
+  let orders = loadCSVData('orders');
+  const newOrder = {
+    id: Date.now().toString(),
+    fullname: fullname,
+    email: email,
+    items: cartIds.join(';'), // Store items as semicolon-separated string
+    timestamp: new Date().toISOString(),
+    userEmail: currentUser.email
+  };
+  
+  orders.push(newOrder);
+  saveCSVData('orders', orders, ['id', 'fullname', 'email', 'items', 'timestamp', 'userEmail']);
+
+  // Clear cart
+  save('cart', []);
+  updateCounts();
+
+  // Show success message
+  document.getElementById('checkout-result').textContent = 'Order placed successfully!';
+  
+  // Close both cart and checkout modals after a short delay
+  setTimeout(() => {
+    closeModal('checkout-modal');
+    closeModal('cart-modal');
+    // Clear the form
+    document.getElementById('checkout-form').reset();
+    document.getElementById('checkout-result').textContent = '';
+  }, 1500);
+};
+
+function handleCategory(evt) {
+  document.querySelectorAll('.categories button').forEach(b => b.classList.remove('active'));
+  evt.target.classList.add('active');
+  const cat = evt.target.dataset.category;
+  curCategory = cat;
+  applyFilters();
+}
+document.querySelectorAll('.categories button').forEach(btn => btn.onclick = handleCategory);
+
+let curCategory = 'All';
+let curSort = 'name-asc';
+document.getElementById('sort-select').onchange = function() {
+  curSort = this.value;
+  applyFilters();
+};
+
+function applyFilters() {
+  let p = [...products];
+  if (curCategory !== 'All') {
+    p = p.filter(prod => prod.category === curCategory);
+  }
+  if (curSort === 'name-asc') {
+    p.sort((a,b)=> a.name.localeCompare(b.name));
+  } else if (curSort === 'name-desc') {
+    p.sort((a,b)=> b.name.localeCompare(a.name));
+  } else if (curSort === 'price-asc') {
+    p.sort((a,b)=> a.price - b.price);
+  } else if (curSort === 'price-desc') {
+    p.sort((a,b)=> b.price - a.price);
+  }
+  renderProducts(p);
+}
+
+window.onload = function() {
+  updateCounts();
+  
+  // Check if user is already logged in
+  if (!checkUserSession()) {
+    // If no user session, show login modal immediately
+    showLoginModal();
+  }
+  
+  applyFilters();
+};
+
+// --- Order Status ---
+document.getElementById('status-form').onsubmit = function(e) {
+  e.preventDefault();
+  const fullname = this.fullname.value.trim();
+  const email = this.email.value.trim();
+  const orders = loadCSVData('orders');
+  const match = orders.find(o => o.fullname === fullname && o.email === email);
+  const res = document.getElementById('status-result');
+  if (match) {
+    const itemIds = match.items.split(';');
+    const itemNames = itemIds.map(id => {
+      const product = products.find(p => p.id === id);
+      return product ? product.name : 'Unknown Product';
+    });
+    
+    res.innerHTML = `Order placed for <strong>${fullname}</strong> (<strong>${email}</strong>)<br>
+    Order ID: <strong>${match.id}</strong><br>
+    Date: <strong>${new Date(match.timestamp).toLocaleDateString()}</strong><br>
+    Items:<br>
+    <ul>${itemNames.map(name => `<li>${name}</li>`).join('')}</ul>`;
+  } else {
+    res.textContent = 'No orders found for these details.';
+  }
+};

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Apple Store</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">Apple Store</div>
+    <nav>
+      <button id="cart-btn">Cart (<span id="cart-count">0</span>)</button>
+      <button id="wishlist-btn">Wishlist (<span id="wishlist-count">0</span>)</button>
+      <button id="status-btn">Order Status</button>
+      <span id="user-info"></span>
+      <button id="auth-btn">Sign In / Sign Up</button>
+      <button id="logout-btn" style="display:none;">Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="categories">
+      <button data-category="All" class="active">All</button>
+      <button data-category="MacBooks">MacBooks</button>
+      <button data-category="iPhones">iPhones</button>
+      <button data-category="Accessories">Accessories</button>
+    </section>
+
+    <section class="sort-bar">
+      <label for="sort-select">Sort:</label>
+      <select id="sort-select">
+        <option value="name-asc">Name (A–Z)</option>
+        <option value="name-desc">Name (Z–A)</option>
+        <option value="price-asc">Price (Low to High)</option>
+        <option value="price-desc">Price (High to Low)</option>
+      </select>
+    </section>
+    
+    <section id="product-list" class="products"></section>
+  </main>
+
+  <!-- Cart Modal -->
+  <div id="cart-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-cart" class="close">&times;</span>
+      <h2>Your Cart</h2>
+      <ul id="cart-items"></ul>
+      <div style="text-align: right; padding: 1rem 0; border-top: 2px solid #353535; margin-top: 1rem;">
+        <span style="font-size: 1.4rem; font-weight: bold; color: #4DD784;">
+          Total: ₹<span id="cart-total">0</span>
+        </span>
+      </div>
+      <button id="checkout-btn">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <!-- Wishlist Modal -->
+  <div id="wishlist-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-wishlist" class="close">&times;</span>
+      <h2>Your Wishlist</h2>
+      <ul id="wishlist-items"></ul>
+    </div>
+  </div>
+  
+  <!-- Checkout Modal -->
+  <div id="checkout-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-checkout" class="close">&times;</span>
+      <h2>Checkout</h2>
+      <form id="checkout-form">
+        <label>Full Name</label>
+        <input type="text" name="fullname" required />
+        <label>Email Address</label>
+        <input type="email" name="email" required />
+        <button type="submit">Place Order</button>
+      </form>
+      <div id="checkout-result"></div>
+    </div>
+  </div>
+
+  <!-- Status Modal -->
+  <div id="status-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-status" class="close">&times;</span>
+      <h2>Check Order Status</h2>
+      <form id="status-form">
+        <label>Full Name</label>
+        <input type="text" name="fullname" required />
+        <label>Email Address</label>
+        <input type="email" name="email" required />
+        <button type="submit">Check Status</button>
+      </form>
+      <div id="status-result"></div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-login" class="close">&times;</span>
+      <h2>Sign In</h2>
+      <form id="login-form">
+        <label>Email</label>
+        <input type="email" id="login-email" required />
+        <label>Password</label>
+        <input type="password" id="login-password" required />
+        <button type="button" id="signin-btn">Sign In</button>
+      </form>
+      <div id="login-result" style="color:red; margin-top: 10px;"></div>
+      <p style="text-align: center; margin-top: 15px;">
+        Don't have an account? 
+        <span id="switch-to-signup" style="color: #0078FF; cursor: pointer; text-decoration: underline;">Sign Up</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div id="signup-modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="close-signup" class="close">&times;</span>
+      <h2>Sign Up</h2>
+      <form id="signup-form">
+        <label>Email</label>
+        <input type="email" id="signup-email" required />
+        <label>Password</label>
+        <input type="password" id="signup-password" required />
+        <button type="button" id="signup-btn">Sign Up</button>
+      </form>
+      <div id="signup-result" style="color:red; margin-top: 10px;"></div>
+      <p style="text-align: center; margin-top: 15px;">
+        Already have an account? 
+        <span id="switch-to-login" style="color: #0078FF; cursor: pointer; text-decoration: underline;">Sign In</span>
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Apple Store.</p>
+  </footer>
+  <script src="js/script.js"></script>
+</body>
+</html>

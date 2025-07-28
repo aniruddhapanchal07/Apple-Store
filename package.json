@@ -1,0 +1,12 @@
+{
+  "name": "apple-store-frontend",
+  "version": "1.0.0",
+  "description": "Apple Store Frontend with Authentication and Cart",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Build completed - using public directory'"
+  },
+  "keywords": ["apple", "store", "ecommerce", "frontend"],
+  "author": "ANI",
+  "license": "MIT"
+}
