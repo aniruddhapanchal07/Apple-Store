@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Apple Store</title>
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header>
@@ -100,19 +100,32 @@
   <div id="login-modal" class="modal hidden">
     <div class="modal-content">
       <span id="close-login" class="close">&times;</span>
-      <h2>Sign In</h2>
+      <h2>Welcome Back</h2>
+      <p style="color: #B3B3B3; margin-bottom: 1.5rem;">Sign in to your Apple Store account</p>
       <form id="login-form">
-        <label>Email</label>
-        <input type="email" id="login-email" required />
-        <label>Password</label>
-        <input type="password" id="login-password" required />
-        <button type="button" id="signin-btn">Sign In</button>
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="Enter your email" required />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Enter your password" required />
+        </div>
+        <div class="form-options">
+          <label class="checkbox-container">
+            <input type="checkbox" id="remember-me">
+            <span class="checkmark"></span>
+            Remember me
+          </label>
+          <span class="forgot-password">Forgot Password?</span>
+        </div>
+        <button type="button" id="signin-btn" class="auth-btn primary">Sign In</button>
       </form>
-      <div id="login-result" style="color:red; margin-top: 10px; display: none;"></div>
-      <p style="text-align: center; margin-top: 15px;">
-        Don't have an account? 
-        <span id="switch-to-signup" style="color: #0078FF; cursor: pointer; text-decoration: underline;">Sign Up</span>
-      </p>
+      <div id="login-result" style="display: none;"></div>
+      <div class="auth-divider">
+        <span>New to Apple Store?</span>
+      </div>
+      <button id="switch-to-signup" class="auth-btn secondary">Create Account</button>
     </div>
   </div>
 
@@ -120,25 +133,56 @@
   <div id="signup-modal" class="modal hidden">
     <div class="modal-content">
       <span id="close-signup" class="close">&times;</span>
-      <h2>Sign Up</h2>
+      <h2>Create Account</h2>
+      <p style="color: #B3B3B3; margin-bottom: 1.5rem;">Join Apple Store to enjoy exclusive benefits</p>
       <form id="signup-form">
-        <label>Email</label>
-        <input type="email" id="signup-email" required />
-        <label>Password</label>
-        <input type="password" id="signup-password" required />
-        <button type="button" id="signup-btn">Sign Up</button>
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" placeholder="Enter your full name" required />
+        </div>
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" id="signup-email" placeholder="Enter your email" required />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Create a strong password" required />
+          <div class="password-strength">
+            <div class="strength-meter">
+              <div class="strength-fill"></div>
+            </div>
+            <span class="strength-text">Password strength</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Confirm Password</label>
+          <input type="password" id="confirm-password" placeholder="Confirm your password" required />
+        </div>
+        <div class="form-options">
+          <label class="checkbox-container">
+            <input type="checkbox" id="terms-agree" required>
+            <span class="checkmark"></span>
+            I agree to the <span class="terms-link">Terms & Conditions</span>
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="newsletter">
+            <span class="checkmark"></span>
+            Subscribe to newsletter for updates
+          </label>
+        </div>
+        <button type="button" id="signup-btn" class="auth-btn primary">Create Account</button>
       </form>
-      <div id="signup-result" style="color:red; margin-top: 10px; display: none;"></div>
-      <p style="text-align: center; margin-top: 15px;">
-        Already have an account? 
-        <span id="switch-to-login" style="color: #0078FF; cursor: pointer; text-decoration: underline;">Sign In</span>
-      </p>
+      <div id="signup-result" style="display: none;"></div>
+      <div class="auth-divider">
+        <span>Already have an account?</span>
+      </div>
+      <button id="switch-to-login" class="auth-btn secondary">Sign In</button>
     </div>
   </div>
 
   <footer>
     <p>&copy; 2025 Apple Store.</p>
   </footer>
-  <script src="/js/script.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>

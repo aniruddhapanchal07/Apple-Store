@@ -1,4 +1,3 @@
-
 // --- CSV Storage Functions ---
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
@@ -62,6 +61,8 @@ const loginEmail = document.getElementById('login-email');
 const loginPassword = document.getElementById('login-password');
 const signupEmail = document.getElementById('signup-email');
 const signupPassword = document.getElementById('signup-password');
+const signupName = document.getElementById('signup-name');
+const confirmPassword = document.getElementById('confirm-password');
 const loginResult = document.getElementById('login-result');
 const signupResult = document.getElementById('signup-result');
 const switchToSignup = document.getElementById('switch-to-signup');
@@ -79,8 +80,15 @@ function showLoginModal() {
 function showSignupModal() {
   signupResult.textContent = '';
   signupResult.style.display = 'none';
+  signupName.value = '';
   signupEmail.value = '';
   signupPassword.value = '';
+  confirmPassword.value = '';
+  // Reset password strength indicator
+  const strengthFill = document.querySelector('.strength-fill');
+  const strengthText = document.querySelector('.strength-text');
+  if (strengthFill) strengthFill.style.width = '0%';
+  if (strengthText) strengthText.textContent = 'Password strength';
   signupModal.classList.remove('hidden');
   loginModal.classList.add('hidden');
 }
@@ -130,8 +138,7 @@ signinBtn.onclick = function() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
   if (!email || !password) {
-    loginResult.textContent = "Please enter email and password.";
-    loginResult.style.display = 'block';
+    showLoginResult("Please enter email and password.", 'error');
     return;
   }
   
@@ -142,41 +149,52 @@ signinBtn.onclick = function() {
     currentUser = user;
     localStorage.setItem('currentUser', email);
     updateUIForLoggedInUser(email);
-    loginResult.textContent = '';
-    loginResult.style.display = 'none';
+    showLoginResult('Welcome back!', 'success');
+    setTimeout(() => {
+      closeAuthModals();
+    }, 1000);
   } else {
-    loginResult.textContent = "Invalid email or password.";
-    loginResult.style.display = 'block';
+    showLoginResult("Invalid email or password.", 'error');
   }
 };
 
 signupBtn.onclick = function() {
+  // Use enhanced validation
+  if (!validateSignupForm()) return;
+  
+  const name = signupName.value.trim();
   const email = signupEmail.value.trim();
   const password = signupPassword.value.trim();
-  if (!email || !password) {
-    signupResult.textContent = "Please enter email and password.";
-    signupResult.style.display = 'block';
-    return;
-  }
+  const newsletter = document.getElementById('newsletter').checked;
   
   let users = loadCSVData('users');
   
   // Check if user already exists
   if (users.find(u => u.email === email)) {
-    signupResult.textContent = "User already exists with this email.";
-    signupResult.style.display = 'block';
+    showSignupResult("User already exists with this email.", 'error');
     return;
   }
   
-  // Add new user
-  users.push({ email: email, password: password });
-  saveCSVData('users', users, ['email', 'password']);
+  // Add new user with enhanced data
+  const newUser = { 
+    name: name,
+    email: email, 
+    password: password,
+    newsletter: newsletter ? 'yes' : 'no',
+    created: new Date().toLocaleDateString()
+  };
   
-  currentUser = { email: email, password: password };
+  users.push(newUser);
+  saveCSVData('users', users, ['name', 'email', 'password', 'newsletter', 'created']);
+  
+  currentUser = newUser;
   localStorage.setItem('currentUser', email);
   updateUIForLoggedInUser(email);
-  signupResult.textContent = '';
-  signupResult.style.display = 'none';
+  showSignupResult('Account created successfully! Welcome to Apple Store.', 'success');
+  
+  setTimeout(() => {
+    closeAuthModals();
+  }, 1500);
 };
 
 logoutBtn.onclick = function() {
@@ -574,3 +592,107 @@ document.getElementById('status-form').onsubmit = function(e) {
     res.style.display = 'block';
   }
 };
+
+// Enhanced password strength checker
+function checkPasswordStrength(password) {
+  const strengthFill = document.querySelector('.strength-fill');
+  const strengthText = document.querySelector('.strength-text');
+  
+  if (!strengthFill || !strengthText) return;
+  
+  let strength = 0;
+  let feedback = '';
+  
+  if (password.length >= 8) strength += 25;
+  if (/[a-z]/.test(password)) strength += 25;
+  if (/[A-Z]/.test(password)) strength += 25;
+  if (/[0-9]/.test(password)) strength += 25;
+  
+  strengthFill.style.width = strength + '%';
+  
+  if (strength === 0) {
+    feedback = 'Too weak';
+    strengthFill.style.background = '#ff4444';
+  } else if (strength <= 50) {
+    feedback = 'Weak';
+    strengthFill.style.background = '#ff4444';
+  } else if (strength <= 75) {
+    feedback = 'Good';
+    strengthFill.style.background = '#ffaa00';
+  } else {
+    feedback = 'Strong';
+    strengthFill.style.background = '#00aa00';
+  }
+  
+  strengthText.textContent = feedback;
+}
+
+// Enhanced signup validation
+function validateSignupForm() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  const termsAgreed = document.getElementById('terms-agree').checked;
+  
+  if (!name) {
+    showSignupResult('Please enter your full name', 'error');
+    return false;
+  }
+  
+  if (!email) {
+    showSignupResult('Please enter your email address', 'error');
+    return false;
+  }
+  
+  if (password.length < 8) {
+    showSignupResult('Password must be at least 8 characters long', 'error');
+    return false;
+  }
+  
+  if (password !== confirmPassword) {
+    showSignupResult('Passwords do not match', 'error');
+    return false;
+  }
+  
+  if (!termsAgreed) {
+    showSignupResult('Please agree to the Terms & Conditions', 'error');
+    return false;
+  }
+  
+  return true;
+}
+
+// Enhanced result display functions
+function showLoginResult(message, type = 'error') {
+  const resultDiv = document.getElementById('login-result');
+  resultDiv.textContent = message;
+  resultDiv.style.display = 'block';
+  resultDiv.style.color = type === 'error' ? '#ff4444' : '#00aa00';
+  resultDiv.style.background = type === 'error' ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0,170,0,0.1)';
+  resultDiv.style.padding = '0.75rem';
+  resultDiv.style.borderRadius = '6px';
+  resultDiv.style.border = `1px solid ${type === 'error' ? '#ff4444' : '#00aa00'}`;
+}
+
+function showSignupResult(message, type = 'error') {
+  const resultDiv = document.getElementById('signup-result');
+  resultDiv.textContent = message;
+  resultDiv.style.display = 'block';
+  resultDiv.style.color = type === 'error' ? '#ff4444' : '#00aa00';
+  resultDiv.style.background = type === 'error' ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0,170,0,0.1)';
+  resultDiv.style.padding = '0.75rem';
+  resultDiv.style.borderRadius = '6px';
+  resultDiv.style.border = `1px solid ${type === 'error' ? '#ff4444' : '#00aa00'}`;
+}
+
+// Updated event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Password strength checker
+  const signupPasswordField = document.getElementById('signup-password');
+  if (signupPasswordField) {
+    signupPasswordField.addEventListener('input', function() {
+      checkPasswordStrength(this.value);
+    });
+  }
+});
